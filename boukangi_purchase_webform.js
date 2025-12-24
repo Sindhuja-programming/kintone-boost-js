@@ -1,9 +1,7 @@
 (function () {
   "use strict";
 
-  /* =========================
-     COMMON DATA
-  ========================= */
+  /* ========= COMMON DATA ========= */
   const sizeMapping = {
     "ジャンパー": ["S", "M", "L", "2L", "3L"],
     "防寒ベスト": ["M", "L", "2L", "3L", "4L", "5L"],
@@ -29,20 +27,19 @@
     return clothTypeMapping[kind] || [];
   }
 
-  /* =========================
-     1) PC + NORMAL MOBILE
-  ========================= */
+  /* ========= PC + NORMAL MOBILE ========= */
   if (typeof kintone !== "undefined" && kintone.events) {
     kintone.events.on(
       [
         "app.record.create.show",
         "app.record.edit.show",
-        "app.record.create.change.kinds",
-        "app.record.edit.change.kinds"
+        "app.record.create.change.種類",
+        "app.record.edit.change.種類"
       ],
       function (event) {
+
         const record = event.record;
-        const kind = record.kinds.value;
+        const kind = record["種類"].value;
         const sizeField = record["サイズ"];
 
         const sizes = getSizes(kind);
@@ -57,18 +54,15 @@
     );
   }
 
-  /* =========================
-     2) BOOST INJECTOR WEB FORM
-  ========================= */
+  /* ========= BOOST INJECTOR WEB FORM ========= */
   document.addEventListener("DOMContentLoaded", function () {
 
-    // If Kintone record object exists, this is NOT web form
+    // If Kintone record exists, this is not WEB FORM
     if (typeof kintone !== "undefined" && kintone.app && kintone.app.record) {
       return;
     }
 
-    const kindSelect =
-      document.querySelector('select[name="kinds"], select[name="種類"]');
+    const kindSelect = document.querySelector('select[name="種類"]');
     const sizeField =
       document.querySelector('input[name="サイズ"], select[name="サイズ"]');
 
