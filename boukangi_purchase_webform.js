@@ -1,10 +1,4 @@
-(function () {
-  'use strict';
-
-  // ✅ TEST 1: JS file loaded
-  console.log('✅ WebForm JS file loaded');
-  alert('JS FILE LOADED'); } // temporary 
-  window.addEventListener('load', function () {
+window.addEventListener('load', function () {
     // 監視対象の親要素を取得
     const parentNode = document.body; // 親要素を監視
 
@@ -35,7 +29,7 @@
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach(mutation => {
             mutation.addedNodes.forEach(elem => {
-                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="作業服"]')) {
+                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="季節品"]')) {
                     var node = elem.querySelector('tr');
                     addevent(node);
                     startObservingTargetElement();
