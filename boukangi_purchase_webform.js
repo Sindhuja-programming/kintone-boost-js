@@ -29,7 +29,7 @@ window.addEventListener('load', function () {
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach(mutation => {
             mutation.addedNodes.forEach(elem => {
-                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="作業服"]')) {
+                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="季節品"]')) {
                     var node = elem.querySelector('tr');
                     addevent(node);
                     startObservingTargetElement();
