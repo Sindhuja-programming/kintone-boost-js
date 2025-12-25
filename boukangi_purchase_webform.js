@@ -1,54 +1,58 @@
 window.addEventListener('load', function () {
-  'use strict';
+    // 監視対象の親要素を取得
+    const parentNode = document.body; // 親要素を監視
 
-  const observerConfig = { childList: true, subtree: true };
+    // オプション設定
+    const config = { childList: true, subtree: true };
 
-  function bindLookupEvent(lookupArea) {
-    const selectEl = lookupArea.querySelector('select');
-    if (!selectEl || selectEl.dataset.bound === 'true') return;
+    function addevent(node) {
+        var dropdown = node.querySelector('select');
+        dropdown.addEventListener('change', () => {
+            var selectedValue = node.querySelector('tbody > tr > td > div > div > span').textContent;
+            selectedValue = selectedValue.split('（')[0].trim(); // '('の前を取得してトリム
+            if (selectedValue === "ジャンパー") {
+                selectedValue = "ジャンパー";
+            }
+            var targetElement = node.querySelector('[field-id="サイズ"] > div > input');
+            targetElement.value = selectedValue;
 
-    selectEl.dataset.bound = 'true';
+            if (selectedValue){
+                // changeイベントを作成して発火
+                var changeEvent = new Event('click');
+                var searchbutton = node.querySelector('.kb-icon.kb-icon-lookup.kb-search')
+                searchbutton.dispatchEvent(changeEvent);
+            }
+        });
+    }
 
-    selectEl.addEventListener('change', function () {
-
-      // selected lookup text
-      const textSpan = lookupArea.querySelector('span');
-      if (!textSpan) return;
-
-      let selectedValue = textSpan.textContent.trim();
-      selectedValue = selectedValue.split('（')[0].trim();
-
-      // サイズ field input
-      const sizeInput = document.querySelector(
-        '[data-field-code="サイズ"] input'
-      );
-      if (!sizeInput) return;
-
-      sizeInput.value = selectedValue;
-
-      // trigger lookup search
-      const searchBtn = lookupArea.querySelector(
-        '.kb-icon-lookup.kb-search'
-      );
-      if (searchBtn) {
-        searchBtn.click();
-      }
+    // オブザーバーインスタンスを生成
+    const observer = new MutationObserver((mutationsList) => {
+        mutationsList.forEach(mutation => {
+            mutation.addedNodes.forEach(elem => {
+                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="作業服"]')) {
+                    var node = elem.querySelector('tr');
+                    addevent(node);
+                    startObservingTargetElement();
+                }
+            });
+        });
     });
-  }
 
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(mutation => {
-      mutation.addedNodes.forEach(node => {
-        if (
-          node.nodeType === Node.ELEMENT_NODE &&
-          node.querySelector &&
-          node.querySelector('[data-field-code="種類"]')
-        ) {
-          bindLookupEvent(node);
-        }
-      });
-    });
-  });
+    // 監視を開始
+    observer.observe(parentNode, config);
 
-  observer.observe(document.body, observerConfig);
+    function startObservingTargetElement() {
+        // MutationObserverを設定
+        const Observer = new MutationObserver((mutationsList) => {
+            mutationsList.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.innerText.includes("種類")){
+                        addevent(node);
+                    }
+                });
+            });
+        });
+        // Observerを開始
+        Observer.observe(parentNode, config);
+    }
 });
