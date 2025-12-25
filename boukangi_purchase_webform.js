@@ -1,57 +1,58 @@
 window.addEventListener('load', function () {
-    const parentNode = document.body; // Observe whole page
+    // 監視対象の親要素を取得
+    const parentNode = document.body; // 親要素を監視
+
+    // オプション設定
     const config = { childList: true, subtree: true };
 
-    // Cloth type → size mapping
-    const SIZE_MAP = {
-        "ジャンパー": ["ジャンパー S", "ジャンパー M", "ジャンパー L", "ジャンパー 2L", "ジャンパー 3L"],
-        "防寒ベスト": ["防寒ベスト M", "防寒ベスト L", "防寒ベスト 2L", "防寒ベスト 3L", "防寒ベスト 4L", "防寒ベスト 5L"],
-        "空調服": ["ファンセット付 S", "ファンセット付 M", "ファンセット付 L", "ファンセット付 2L", "ファンセット付 3L", "ベストのみ S", "ベストのみ M", "ベストのみ L", "ベストのみ 2L", "ベストのみ 3L", "ファンセットのみ"]
-    };
+    function addevent(node) {
+        var dropdown = node.querySelector('select');
+        dropdown.addEventListener('change', () => {
+            var selectedValue = node.querySelector('tbody > tr > td > div > div > span').textContent;
+            selectedValue = selectedValue.split('（')[0].trim(); // '('の前を取得してトリム
+            if (selectedValue === "ジャンパー") {
+                selectedValue = "ジャンパー";
+            }
+            var targetElement = node.querySelector('[field-id="サイズ"] > div > input');
+            targetElement.value = selectedValue;
 
-    function addEvent(node) {
-        const typeDropdown = node.querySelector('[field-id="種類"] select');
-        const sizeInput = node.querySelector('[field-id="サイズ"] input'); // Lookup input
-        const lookupButton = node.querySelector('.kb-icon.kb-icon-lookup.kb-search');
-
-        if (!typeDropdown || !sizeInput || !lookupButton) return;
-
-        typeDropdown.addEventListener('change', function () {
-            const selectedType = this.value;
-
-            if (!SIZE_MAP[selectedType]) return;
-
-            // Fill lookup input with the first size (optional: can leave empty if you want user to select)
-            sizeInput.value = ''; // Leave empty so user selects
-
-            // Trigger click to open lookup table
-            lookupButton.click();
-
-            // After a short delay, filter the lookup table rows
-            setTimeout(() => {
-                const rows = document.querySelectorAll('.kb-lookup-table tbody tr');
-                rows.forEach(row => {
-                    const text = row.innerText || "";
-                    if (SIZE_MAP[selectedType].some(size => text.includes(size))) {
-                        row.style.display = ""; // show
-                    } else {
-                        row.style.display = "none"; // hide
-                    }
-                });
-            }, 300); // Adjust if needed
+            if (selectedValue){
+                // changeイベントを作成して発火
+                var changeEvent = new Event('click');
+                var searchbutton = node.querySelector('.kb-icon.kb-icon-lookup.kb-search')
+                searchbutton.dispatchEvent(changeEvent);
+            }
         });
     }
 
-    // Observe added nodes
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
+    // オブザーバーインスタンスを生成
+    const observer = new MutationObserver((mutationsList) => {
+        mutationsList.forEach(mutation => {
             mutation.addedNodes.forEach(elem => {
-                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="種類"]')) {
-                    addEvent(elem);
+                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="季節品"]')) {
+                    var node = elem.querySelector('tr');
+                    addevent(node);
+                    startObservingTargetElement();
                 }
             });
         });
     });
 
+    // 監視を開始
     observer.observe(parentNode, config);
+
+    function startObservingTargetElement() {
+        // MutationObserverを設定
+        const Observer = new MutationObserver((mutationsList) => {
+            mutationsList.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.innerText.includes("種類")){
+                        addevent(node);
+                    }
+                });
+            });
+        });
+        // Observerを開始
+        Observer.observe(parentNode, config);
+    }
 });
