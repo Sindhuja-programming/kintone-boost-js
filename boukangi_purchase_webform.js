@@ -32,55 +32,43 @@
     }
   };
 
-  const wait = setInterval(function () {
+  kb.ready(function (kb) {
 
-    const typeWrap = document.querySelector('[data-field-code="種類"]');
-    const sizeWrap = document.querySelector('[data-field-code="サイズ_Web"]');
-    const costWrap = document.querySelector('[data-field-code="個人負担"]');
+    const typeField = kb.field('種類');
+    const sizeField = kb.field('サイズ_Web');
+    const costField = kb.field('個人負担');
 
-    if (!typeWrap || !sizeWrap) return;
+    if (!typeField || !sizeField) return;
 
-    const typeSelect = typeWrap.querySelector('select');
-    const sizeSelect = sizeWrap.querySelector('select');
-    const costInput = costWrap ? costWrap.querySelector('input') : null;
+    // Clear size initially
+    sizeField.setOptions(['----']);
+    sizeField.setValue('');
 
-    if (!typeSelect || !sizeSelect) return;
+    typeField.on('change', function () {
+      const type = typeField.getValue();
 
-    clearInterval(wait);
+      sizeField.setValue('');
+      costField.setValue('');
 
-    // Reset size dropdown
-    sizeSelect.innerHTML = '<option value="">----</option>';
+      if (!DATA[type]) {
+        sizeField.setOptions(['----']);
+        return;
+      }
 
-    const updateSizes = function () {
-      const type = typeSelect.value;
+      sizeField.setOptions(
+        ['----'].concat(Object.keys(DATA[type]))
+      );
+    });
 
-      sizeSelect.innerHTML = '<option value="">----</option>';
-      if (costInput) costInput.value = '';
+    sizeField.on('change', function () {
+      const type = typeField.getValue();
+      const size = sizeField.getValue();
 
-      if (!DATA[type]) return;
-
-      Object.keys(DATA[type]).forEach(function (size) {
-        const opt = document.createElement('option');
-        opt.value = size;
-        opt.textContent = size;
-        sizeSelect.appendChild(opt);
-      });
-    };
-
-    // 種類 change (both events for safety)
-    typeSelect.addEventListener('change', updateSizes);
-    typeSelect.addEventListener('input', updateSizes);
-
-    // サイズ change → 個人負担
-    sizeSelect.addEventListener('change', function () {
-      const type = typeSelect.value;
-      const size = this.value;
-
-      if (DATA[type] && DATA[type][size] && costInput) {
-        costInput.value = DATA[type][size];
+      if (DATA[type] && DATA[type][size]) {
+        costField.setValue(DATA[type][size]);
       }
     });
 
-  }, 300);
+  });
 
 })();
