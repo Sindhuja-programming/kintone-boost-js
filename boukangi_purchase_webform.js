@@ -8,7 +8,7 @@ window.addEventListener('load', function () {
     function addevent(node) {
         var dropdown = node.querySelector('select');
         dropdown.addEventListener('change', () => {
-            var selectedValue = node.querySelector('tbody > tr > td > div > div > span').textContent;
+            var selectedValue = node.querySelector('div > span').textContent;
             selectedValue = selectedValue.split('（')[0].trim(); // '('の前を取得してトリム
             if (selectedValue === "ジャンパー") {
                 selectedValue = "ジャンパー";
