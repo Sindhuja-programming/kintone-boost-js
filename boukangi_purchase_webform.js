@@ -1,74 +1,54 @@
-(function () {
+window.addEventListener('load', function () {
   'use strict';
 
-  const DATA = {
-    "ジャンパー": {
-      "ジャンパー　S": 1000,
-      "ジャンパー　M": 1000,
-      "ジャンパー　L": 1000,
-      "ジャンパー　2L": 1000,
-      "ジャンパー　3L": 1000
-    },
-    "防寒ベスト": {
-      "防寒ベスト　M": 1000,
-      "防寒ベスト　L": 1000,
-      "防寒ベスト　2L": 1000,
-      "防寒ベスト　3L": 1000,
-      "防寒ベスト　4L": 1000,
-      "防寒ベスト　5L": 1000
-    },
-    "空調服": {
-      "ファンセット付　S": 3000,
-      "ファンセット付　M": 3000,
-      "ファンセット付　L": 3000,
-      "ファンセット付　2L": 3000,
-      "ファンセット付　3L": 3000,
-      "ベストのみ　S": 1000,
-      "ベストのみ　M": 1000,
-      "ベストのみ　L": 1000,
-      "ベストのみ　2L": 1000,
-      "ベストのみ　3L": 1000,
-      "ファンセットのみ": 2000
-    }
-  };
+  const observerConfig = { childList: true, subtree: true };
 
-  kb.ready(function (kb) {
+  function bindLookupEvent(lookupArea) {
+    const selectEl = lookupArea.querySelector('select');
+    if (!selectEl || selectEl.dataset.bound === 'true') return;
 
-    const typeField = kb.field('種類');
-    const sizeField = kb.field('サイズ_Web');
-    const costField = kb.field('個人負担');
+    selectEl.dataset.bound = 'true';
 
-    if (!typeField || !sizeField) return;
+    selectEl.addEventListener('change', function () {
 
-    // Clear size initially
-    sizeField.setOptions(['----']);
-    sizeField.setValue('');
+      // selected lookup text
+      const textSpan = lookupArea.querySelector('span');
+      if (!textSpan) return;
 
-    typeField.on('change', function () {
-      const type = typeField.getValue();
+      let selectedValue = textSpan.textContent.trim();
+      selectedValue = selectedValue.split('（')[0].trim();
 
-      sizeField.setValue('');
-      costField.setValue('');
-
-      if (!DATA[type]) {
-        sizeField.setOptions(['----']);
-        return;
-      }
-
-      sizeField.setOptions(
-        ['----'].concat(Object.keys(DATA[type]))
+      // サイズ field input
+      const sizeInput = document.querySelector(
+        '[data-field-code="サイズ"] input'
       );
-    });
+      if (!sizeInput) return;
 
-    sizeField.on('change', function () {
-      const type = typeField.getValue();
-      const size = sizeField.getValue();
+      sizeInput.value = selectedValue;
 
-      if (DATA[type] && DATA[type][size]) {
-        costField.setValue(DATA[type][size]);
+      // trigger lookup search
+      const searchBtn = lookupArea.querySelector(
+        '.kb-icon-lookup.kb-search'
+      );
+      if (searchBtn) {
+        searchBtn.click();
       }
     });
+  }
 
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+        if (
+          node.nodeType === Node.ELEMENT_NODE &&
+          node.querySelector &&
+          node.querySelector('[data-field-code="種類"]')
+        ) {
+          bindLookupEvent(node);
+        }
+      });
+    });
   });
 
-})();
+  observer.observe(document.body, observerConfig);
+});
