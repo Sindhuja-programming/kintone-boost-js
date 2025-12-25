@@ -1,4 +1,10 @@
-window.addEventListener('load', function () {
+(function () {
+  'use strict';
+
+  // ✅ TEST 1: JS file loaded
+  console.log('✅ WebForm JS file loaded');
+  alert('JS FILE LOADED'); } // temporary 
+  window.addEventListener('load', function () {
     // 監視対象の親要素を取得
     const parentNode = document.body; // 親要素を監視
 
