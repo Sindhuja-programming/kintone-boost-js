@@ -10,8 +10,8 @@ window.addEventListener('load', function () {
         dropdown.addEventListener('change', () => {
             var selectedValue = node.querySelector('tbody > tr > td > div > div > span').textContent;
             selectedValue = selectedValue.split('（')[0].trim(); // '('の前を取得してトリム
-            if (selectedValue === "ジャンパー") {
-                selectedValue = "ジャンパー";
+            if (selectedValue === "兼用帽子") {
+                selectedValue = "帽子";
             }
             var targetElement = node.querySelector('[field-id="サイズ"] > div > input');
             targetElement.value = selectedValue;
@@ -29,7 +29,7 @@ window.addEventListener('load', function () {
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach(mutation => {
             mutation.addedNodes.forEach(elem => {
-                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="季節品"]')) {
+                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="作業服"]')) {
                     var node = elem.querySelector('tr');
                     addevent(node);
                     startObservingTargetElement();
