@@ -1,23 +1,23 @@
 window.addEventListener('load', function () {
-    // 監視対象の親要素を取得
-    const parentNode = document.body; // 親要素を監視
+    //Get the parent element to be monitored
+    const parentNode = document.body; // Monitor the parent element
 
-    // オプション設定
+    // Set options
     const config = { childList: true, subtree: true };
 
     function addevent(node) {
         var dropdown = node.querySelector('select');
         dropdown.addEventListener('change', () => {
             var selectedValue = node.querySelector('tbody > tr > td > div > div > span').textContent;
-            selectedValue = selectedValue.split('（')[0].trim(); // '('の前を取得してトリム
-            if (selectedValue === "兼用帽子") {
-                selectedValue = "帽子";
+            selectedValue = selectedValue.split('(')[0].trim(); // Get and trim before '('
+            if (selectedValue === "Dual-purpose hat") {
+                selectedValue = "hat";
             }
-            var targetElement = node.querySelector('[field-id="サイズ"] > div > input');
+            var targetElement = node.querySelector('[field-id="size"] > div > input');
             targetElement.value = selectedValue;
 
             if (selectedValue){
-                // changeイベントを作成して発火
+                // Create and fire a change event
                 var changeEvent = new Event('click');
                 var searchbutton = node.querySelector('.kb-icon.kb-icon-lookup.kb-search')
                 searchbutton.dispatchEvent(changeEvent);
@@ -25,11 +25,11 @@ window.addEventListener('load', function () {
         });
     }
 
-    // オブザーバーインスタンスを生成
+    // Create an observer instance
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach(mutation => {
             mutation.addedNodes.forEach(elem => {
-                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="季節品"]')) {
+                if (elem.nodeType === Node.ELEMENT_NODE && elem.querySelector('[field-id="Workwear"]')) {
                     var node = elem.querySelector('tr');
                     addevent(node);
                     startObservingTargetElement();
@@ -38,11 +38,11 @@ window.addEventListener('load', function () {
         });
     });
 
-    // 監視を開始
+    // Start monitoring
     observer.observe(parentNode, config);
 
     function startObservingTargetElement() {
-        // MutationObserverを設定
+        // Set MutationObserver
         const Observer = new MutationObserver((mutationsList) => {
             mutationsList.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
@@ -52,7 +52,7 @@ window.addEventListener('load', function () {
                 });
             });
         });
-        // Observerを開始
+        // Start the Observer
         Observer.observe(parentNode, config);
     }
 });
