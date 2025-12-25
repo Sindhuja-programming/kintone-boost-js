@@ -34,28 +34,27 @@
 
   const wait = setInterval(function () {
 
-    const typeInput = document.querySelector('input[name="種類"]');
-    const sizeInput = document.querySelector('input[name="サイズ_Web"]');
-    const costInput = document.querySelector('input[name="個人負担"]');
+    const typeWrap = document.querySelector('[data-field-code="種類"]');
+    const sizeWrap = document.querySelector('[data-field-code="サイズ_Web"]');
+    const costWrap = document.querySelector('[data-field-code="個人負担"]');
 
-    if (!typeInput || !sizeInput) return;
+    if (!typeWrap || !sizeWrap) return;
+
+    const typeSelect = typeWrap.querySelector('select');
+    const sizeSelect = sizeWrap.querySelector('select');
+    const costInput = costWrap ? costWrap.querySelector('input') : null;
+
+    if (!typeSelect || !sizeSelect) return;
 
     clearInterval(wait);
 
-    const datalist = document.createElement('datalist');
-    datalist.id = 'size_list';
-    document.body.appendChild(datalist);
-    sizeInput.setAttribute('list', 'size_list');
+    // Reset size dropdown
+    sizeSelect.innerHTML = '<option value="">----</option>';
 
-    sizeInput.value = '';
-    if (costInput) costInput.value = '';
+    const updateSizes = function () {
+      const type = typeSelect.value;
 
-    // ✅ USE input event
-    typeInput.addEventListener('input', function () {
-      const type = this.value;
-
-      datalist.innerHTML = '';
-      sizeInput.value = '';
+      sizeSelect.innerHTML = '<option value="">----</option>';
       if (costInput) costInput.value = '';
 
       if (!DATA[type]) return;
@@ -63,12 +62,18 @@
       Object.keys(DATA[type]).forEach(function (size) {
         const opt = document.createElement('option');
         opt.value = size;
-        datalist.appendChild(opt);
+        opt.textContent = size;
+        sizeSelect.appendChild(opt);
       });
-    });
+    };
 
-    sizeInput.addEventListener('input', function () {
-      const type = typeInput.value;
+    // 種類 change (both events for safety)
+    typeSelect.addEventListener('change', updateSizes);
+    typeSelect.addEventListener('input', updateSizes);
+
+    // サイズ change → 個人負担
+    sizeSelect.addEventListener('change', function () {
+      const type = typeSelect.value;
       const size = this.value;
 
       if (DATA[type] && DATA[type][size] && costInput) {
