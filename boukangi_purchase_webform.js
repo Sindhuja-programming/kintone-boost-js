@@ -11,6 +11,8 @@ window.addEventListener('load', function () {
         '空調服': ['ファンセット付', 'ベストのみ', 'ファンセットのみ']
     };
     
+    let currentSelectedType = '';
+    
     function bindKindaChange(container) {
         const kindaSelect = container.querySelector('[field-id="種類"] select');
         if (!kindaSelect || kindaSelect.dataset.bound) return;
@@ -18,6 +20,8 @@ window.addEventListener('load', function () {
         
         kindaSelect.addEventListener('change', function () {
             const selectedType = kindaSelect.value;
+            currentSelectedType = selectedType; // Store current selection
+            
             const sizeField = container.querySelector('[field-id="サイズ"] input');
             const lookupBtn = container.querySelector(
                 '[field-id="サイズ"] .kb-icon-lookup.kb-search'
@@ -34,11 +38,6 @@ window.addEventListener('load', function () {
                 // For 空調服, clear search and filter manually
                 sizeField.value = '';
                 lookupBtn.dispatchEvent(new Event('click'));
-                
-                // Filter the lookup table after it opens
-                setTimeout(function() {
-                    filterLookupTable('空調服');
-                }, 300);
             } else {
                 // For ジャンパー and 防寒ベスト, search normally
                 sizeField.value = selectedType;
@@ -50,15 +49,18 @@ window.addEventListener('load', function () {
     function filterLookupTable(clothType) {
         const lookupDialog = document.querySelector('.kb-dialog-container');
         if (!lookupDialog) {
-            console.log('Lookup dialog not found');
             return;
         }
         
         const tableRows = lookupDialog.querySelectorAll('tbody tr');
+        if (tableRows.length === 0) {
+            return;
+        }
+        
         const allowedPrefixes = clothTypeSizeMapping[clothType] || [];
         
-        if (allowedPrefixes.length === 0) {
-            // Show all if no mapping (when ---- is selected)
+        if (!clothType || clothType === '----') {
+            // Show all
             tableRows.forEach(row => row.style.display = '');
             return;
         }
@@ -66,7 +68,6 @@ window.addEventListener('load', function () {
         tableRows.forEach(function(row) {
             const cells = row.querySelectorAll('td');
             if (cells.length === 0) {
-                // Hide empty rows
                 row.style.display = 'none';
                 return;
             }
@@ -84,15 +85,15 @@ window.addEventListener('load', function () {
                 return;
             }
             
-            // For 空調服, exclude ジャンパー and 防寒ベスト
+            // For 空調服, show only 空調服 related items
             if (clothType === '空調服') {
-                // Hide if starts with ジャンパー or 防寒ベスト
+                // Check if row starts with ジャンパー or 防寒ベスト (hide these)
                 if (rowText.startsWith('ジャンパー') || rowText.startsWith('防寒ベスト')) {
                     row.style.display = 'none';
                     return;
                 }
                 
-                // Show if starts with any 空調服 prefix
+                // Show only if starts with allowed prefixes for 空調服
                 let shouldShow = false;
                 for (let i = 0; i < allowedPrefixes.length; i++) {
                     if (rowText.startsWith(allowedPrefixes[i])) {
@@ -103,7 +104,7 @@ window.addEventListener('load', function () {
                 
                 row.style.display = shouldShow ? '' : 'none';
             } else {
-                // For other types, check if row starts with allowed prefix
+                // For ジャンパー and 防寒ベスト
                 let shouldShow = false;
                 for (let i = 0; i < allowedPrefixes.length; i++) {
                     if (rowText.startsWith(allowedPrefixes[i])) {
@@ -117,7 +118,40 @@ window.addEventListener('load', function () {
         });
     }
     
-    // Observer for dynamically added elements
+    // Observer specifically for lookup dialog table changes
+    let dialogObserver = null;
+    
+    function observeDialogTable() {
+        const lookupDialog = document.querySelector('.kb-dialog-container');
+        if (!lookupDialog) return;
+        
+        // Disconnect previous observer if exists
+        if (dialogObserver) {
+            dialogObserver.disconnect();
+        }
+        
+        // Create new observer for the dialog
+        dialogObserver = new MutationObserver(function(mutations) {
+            // Filter table whenever content changes
+            if (currentSelectedType === '空調服') {
+                filterLookupTable(currentSelectedType);
+            }
+        });
+        
+        // Observe the dialog for any changes
+        dialogObserver.observe(lookupDialog, { 
+            childList: true, 
+            subtree: true,
+            characterData: true
+        });
+        
+        // Apply initial filter
+        if (currentSelectedType === '空調服') {
+            filterLookupTable(currentSelectedType);
+        }
+    }
+    
+    // Main observer for dynamically added elements
     const observer = new MutationObserver((mutations) => {
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(node => {
@@ -130,12 +164,18 @@ window.addEventListener('load', function () {
                 
                 // Watch for lookup dialog appearance
                 if (node.classList && node.classList.contains('kb-dialog-container')) {
-                    // Check which cloth type is selected
-                    const kindaSelect = document.querySelector('[field-id="種類"] select');
-                    if (kindaSelect && kindaSelect.value === '空調服') {
+                    setTimeout(function() {
+                        observeDialogTable();
+                    }, 50);
+                }
+                
+                // Also check if tbody is added to existing dialog
+                if (node.tagName === 'TBODY') {
+                    const dialog = node.closest('.kb-dialog-container');
+                    if (dialog && currentSelectedType === '空調服') {
                         setTimeout(function() {
-                            filterLookupTable('空調服');
-                        }, 100);
+                            filterLookupTable(currentSelectedType);
+                        }, 50);
                     }
                 }
             });
@@ -147,6 +187,10 @@ window.addEventListener('load', function () {
     // Bind to existing form if already loaded
     const existingKinda = document.querySelector('[field-id="種類"]');
     if (existingKinda) {
+        const select = existingKinda.querySelector('select');
+        if (select) {
+            currentSelectedType = select.value;
+        }
         bindKindaChange(existingKinda.closest('tr') || existingKinda.closest('div') || document.body);
     }
 });
