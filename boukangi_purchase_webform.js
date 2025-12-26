@@ -20,31 +20,19 @@ window.addEventListener('load', function () {
 
             if (!sizeField || !lookupBtn) return;
 
-            // ---- FIX STARTS HERE (空調服 only) ----
-            if (selectedType === '空調服') {
-                const airTypes = ['ファンセット付', 'ベストのみ', 'ファンセットのみ'];
-
-                // clear first
-                sizeField.value = '';
-                lookupBtn.dispatchEvent(new Event('click'));
-
-                // search each variety
-                airTypes.forEach(type => {
-                    sizeField.value = type;
-                    lookupBtn.dispatchEvent(new Event('click'));
-                });
-
-            } else if (!selectedType || selectedType === '----') {
+            // ---- FINAL STABLE LOGIC ----
+            if (!selectedType || selectedType === '----') {
                 // show all
                 sizeField.value = '';
-                lookupBtn.dispatchEvent(new Event('click'));
-
+            } else if (selectedType === '空調服') {
+                // IMPORTANT: single grouping value
+                sizeField.value = '空調服';
             } else {
                 // ジャンパー / 防寒ベスト
                 sizeField.value = selectedType;
-                lookupBtn.dispatchEvent(new Event('click'));
             }
-            // ---- FIX ENDS HERE ----
+
+            lookupBtn.dispatchEvent(new Event('click'));
         });
     }
 
