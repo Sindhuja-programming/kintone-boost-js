@@ -21,11 +21,9 @@ window.addEventListener('load', function () {
             if (!sizeField || !lookupBtn) return;
 
             if (!selectedType || selectedType === '----') {
-                // Show all
                 sizeField.value = '';
             } else {
                 // ジャンパー / 防寒ベスト / 空調服
-                // 空調服 will naturally return 3 types
                 sizeField.value = selectedType;
             }
 
@@ -37,7 +35,6 @@ window.addEventListener('load', function () {
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(node => {
                 if (node.nodeType !== Node.ELEMENT_NODE) return;
-
                 if (node.querySelector && node.querySelector('[field-id="種類"]')) {
                     bindKindaChange(node);
                 }
