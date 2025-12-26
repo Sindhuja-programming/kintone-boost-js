@@ -20,15 +20,31 @@ window.addEventListener('load', function () {
 
             if (!sizeField || !lookupBtn) return;
 
-            // Set lookup filter value
-            if (!selectedType || selectedType === '----') {
-                sizeField.value = ''; // show all
-            } else {
-                sizeField.value = selectedType;
-            }
+            // ---- FIX STARTS HERE (空調服 only) ----
+            if (selectedType === '空調服') {
+                const airTypes = ['ファンセット付', 'ベストのみ', 'ファンセットのみ'];
 
-            // Trigger lookup search
-            lookupBtn.dispatchEvent(new Event('click'));
+                // clear first
+                sizeField.value = '';
+                lookupBtn.dispatchEvent(new Event('click'));
+
+                // search each variety
+                airTypes.forEach(type => {
+                    sizeField.value = type;
+                    lookupBtn.dispatchEvent(new Event('click'));
+                });
+
+            } else if (!selectedType || selectedType === '----') {
+                // show all
+                sizeField.value = '';
+                lookupBtn.dispatchEvent(new Event('click'));
+
+            } else {
+                // ジャンパー / 防寒ベスト
+                sizeField.value = selectedType;
+                lookupBtn.dispatchEvent(new Event('click'));
+            }
+            // ---- FIX ENDS HERE ----
         });
     }
 
@@ -37,7 +53,6 @@ window.addEventListener('load', function () {
             mutation.addedNodes.forEach(node => {
                 if (node.nodeType !== Node.ELEMENT_NODE) return;
 
-                // Record form row
                 if (node.querySelector && node.querySelector('[field-id="種類"]')) {
                     bindKindaChange(node);
                 }
