@@ -20,15 +20,12 @@ window.addEventListener('load', function () {
 
             if (!sizeField || !lookupBtn) return;
 
-            // ---- FINAL STABLE LOGIC ----
             if (!selectedType || selectedType === '----') {
-                // show all
+                // Show all
                 sizeField.value = '';
-            } else if (selectedType === '空調服') {
-                // IMPORTANT: single grouping value
-                sizeField.value = '空調服';
             } else {
-                // ジャンパー / 防寒ベスト
+                // ジャンパー / 防寒ベスト / 空調服
+                // 空調服 will naturally return 3 types
                 sizeField.value = selectedType;
             }
 
