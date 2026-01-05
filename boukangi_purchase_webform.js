@@ -32,7 +32,7 @@ window.addEventListener('load', function () {
 
             // 空調服 → open lookup WITHOUT keyword
             if (currentType === '空調服') {
-                sizeInput.value = ''; // ✅ MUST be empty
+                sizeInput.value = currentType; // ✅ MUST be empty
                 searchBtn.click();
                 return;
             }
