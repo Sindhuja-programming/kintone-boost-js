@@ -32,7 +32,7 @@ window.addEventListener('load', function () {
 
             // 空調服 → open lookup, then filter rows
             if (currentType === '空調服') {
-                sizeInput.value = '';
+                sizeInput.value = currentType;
                 searchBtn.click();
                 return;
             }
