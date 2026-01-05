@@ -40,7 +40,7 @@ window.addEventListener('load', function () {
 
             if (currentSelectedType === '空調服') {
                 // Clear search – filtering handled by DOM filter
-                sizeField.value = '';
+                sizeField.value = ''ファンセット付', 'ベストのみ', 'ファンセットのみ'';
             } else {
                 // Use built-in lookup filtering
                 sizeField.value = currentSelectedType;
