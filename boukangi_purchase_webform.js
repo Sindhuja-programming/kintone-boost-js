@@ -30,9 +30,9 @@ window.addEventListener('load', function () {
                 return;
             }
 
-            // 空調服 → open lookup, then filter rows
+            // 空調服 → open lookup WITHOUT keyword
             if (currentType === '空調服') {
-                sizeInput.value = currentType;
+                sizeInput.value = ''; // ✅ MUST be empty
                 searchBtn.click();
                 return;
             }
@@ -44,9 +44,9 @@ window.addEventListener('load', function () {
     }
 
     /* =========================
-       Filter lookup rows (空調服 only)
+       空調服 filtering
     ========================= */
-    function filterAirClothRows() {
+    function filterForAirConditionedClothing() {
         if (currentType !== '空調服') return;
 
         const dialog = document.querySelector('.kb-dialog-container');
@@ -56,21 +56,24 @@ window.addEventListener('load', function () {
         if (!rows.length) return;
 
         rows.forEach(row => {
-            const text = row.textContent.replace(/\s+/g, ' ').trim();
+            const text = row.innerText.trim();
 
-            // Remove ジャンパー / 防寒ベスト
-            if (text.includes('ジャンパー') || text.includes('防寒ベスト')) {
+            // Hide ジャンパー & 防寒ベスト
+            if (text.startsWith('ジャンパー') || text.startsWith('防寒ベスト')) {
                 row.style.display = 'none';
                 return;
             }
 
-            // Allow only 空調服-related items
-            const allow =
-                text.includes('ファンセット付') ||
-                text.includes('ベストのみ') ||
-                text.includes('ファンセットのみ');
-
-            row.style.display = allow ? '' : 'none';
+            // Show only 空調服-related items
+            if (
+                text.startsWith('ファンセット付') ||
+                text.startsWith('ベストのみ') ||
+                text.startsWith('ファンセットのみ')
+            ) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
         });
     }
 
@@ -85,14 +88,14 @@ window.addEventListener('load', function () {
 
         if (dialogObserver) dialogObserver.disconnect();
 
-        dialogObserver = new MutationObserver(filterAirClothRows);
+        dialogObserver = new MutationObserver(filterForAirConditionedClothing);
 
         dialogObserver.observe(dialog, {
             childList: true,
             subtree: true
         });
 
-        filterAirClothRows();
+        filterForAirConditionedClothing();
     }
 
     /* =========================
@@ -103,7 +106,7 @@ window.addEventListener('load', function () {
             mutation.addedNodes.forEach(elem => {
                 if (elem.nodeType !== Node.ELEMENT_NODE) return;
 
-                // Form row
+                // Bind 種類
                 if (elem.querySelector && elem.querySelector('[field-id="種類"]')) {
                     const row =
                         elem.querySelector('tr') ||
@@ -119,7 +122,7 @@ window.addEventListener('load', function () {
 
                 // Table body rendered
                 if (elem.tagName === 'TBODY') {
-                    setTimeout(filterAirClothRows, 50);
+                    setTimeout(filterForAirConditionedClothing, 50);
                 }
             });
         });
