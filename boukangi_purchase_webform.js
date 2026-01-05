@@ -4,7 +4,7 @@ window.addEventListener('load', function () {
     const parentNode = document.body;
     const config = { childList: true, subtree: true };
 
-    // Cloth type → allowed size prefixes
+    // Cloth type → allowed size prefixes mapping
     const clothTypeSizeMapping = {
         'ジャンパー': ['ジャンパー'],
         '防寒ベスト': ['防寒ベスト'],
@@ -14,7 +14,7 @@ window.addEventListener('load', function () {
     let currentSelectedType = '';
 
     /* =========================
-       Bind 種類 dropdown change
+       Bind 種類 change event
     ========================= */
     function bindKindaChange(container) {
         const kindaSelect = container.querySelector('[field-id="種類"] select');
@@ -32,20 +32,8 @@ window.addEventListener('load', function () {
 
             if (!sizeField || !lookupBtn) return;
 
-            if (!currentSelectedType || currentSelectedType === '----') {
-                sizeField.value = '';
-                lookupBtn.dispatchEvent(new Event('click'));
-                return;
-            }
-
-            if (currentSelectedType === '空調服') {
-                // IMPORTANT: do not set search text
-                sizeField.value = '';
-            } else {
-                // Use built-in lookup filtering
-                sizeField.value = currentSelectedType;
-            }
-
+            // Always open lookup fresh (filtering is handled in the dialog)
+            sizeField.value = '';
             lookupBtn.dispatchEvent(new Event('click'));
         });
     }
@@ -60,41 +48,17 @@ window.addEventListener('load', function () {
         const tableRows = lookupDialog.querySelectorAll('tbody tr');
         if (!tableRows.length) return;
 
-        const allowedPrefixes = clothTypeSizeMapping[clothType] || [];
+        const allowedPrefixes = clothTypeSizeMapping[clothType];
 
-        if (!clothType || clothType === '----') {
+        // If no valid cloth type selected → show all
+        if (!allowedPrefixes || allowedPrefixes.length === 0) {
             tableRows.forEach(row => row.style.display = '');
             return;
         }
 
         tableRows.forEach(row => {
-            const rowText = row.innerText.trim();
-            if (!rowText) {
-                row.style.display = 'none';
-                return;
-            }
+            const rowText = row.textContent.trim();
 
-            // ✅ Special strict filtering for 空調服
-            if (clothType === '空調服') {
-                // Explicitly hide ジャンパー & 防寒ベスト
-                if (
-                    rowText.startsWith('ジャンパー') ||
-                    rowText.startsWith('防寒ベスト')
-                ) {
-                    row.style.display = 'none';
-                    return;
-                }
-
-                // Show ONLY the three 空調服 types
-                const shouldShow = allowedPrefixes.some(prefix =>
-                    rowText.startsWith(prefix)
-                );
-
-                row.style.display = shouldShow ? '' : 'none';
-                return;
-            }
-
-            // ✅ Normal filtering for ジャンパー / 防寒ベスト
             const shouldShow = allowedPrefixes.some(prefix =>
                 rowText.startsWith(prefix)
             );
@@ -122,36 +86,36 @@ window.addEventListener('load', function () {
 
         dialogObserver.observe(lookupDialog, {
             childList: true,
-            subtree: true,
-            characterData: true
+            subtree: true
         });
 
+        // Initial filter when dialog opens
         filterLookupTable(currentSelectedType);
     }
 
     /* =========================
-       Global observer
+       Main DOM observer
     ========================= */
     const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
             mutation.addedNodes.forEach(node => {
                 if (node.nodeType !== Node.ELEMENT_NODE) return;
 
+                // Bind 種類 field
                 if (node.querySelector && node.querySelector('[field-id="種類"]')) {
                     bindKindaChange(node);
                 }
 
+                // Detect lookup dialog open
                 if (node.classList && node.classList.contains('kb-dialog-container')) {
                     setTimeout(observeDialogTable, 50);
                 }
 
+                // Detect table body insertion
                 if (node.tagName === 'TBODY') {
-                    const dialog = node.closest('.kb-dialog-container');
-                    if (dialog) {
-                        setTimeout(() => {
-                            filterLookupTable(currentSelectedType);
-                        }, 50);
-                    }
+                    setTimeout(() => {
+                        filterLookupTable(currentSelectedType);
+                    }, 50);
                 }
             });
         });
@@ -160,7 +124,7 @@ window.addEventListener('load', function () {
     observer.observe(parentNode, config);
 
     /* =========================
-       Initial bind
+       Initial binding (existing form)
     ========================= */
     const existingKinda = document.querySelector('[field-id="種類"] select');
     if (existingKinda) {
