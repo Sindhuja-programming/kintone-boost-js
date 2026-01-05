@@ -39,8 +39,8 @@ window.addEventListener('load', function () {
             }
 
             if (currentSelectedType === '空調服') {
-                // Clear search – filtering handled by DOM filter
-                sizeField.value = ''ファンセット付', 'ベストのみ', 'ファンセットのみ'';
+                // IMPORTANT: do not set search text
+                sizeField.value = '';
             } else {
                 // Use built-in lookup filtering
                 sizeField.value = currentSelectedType;
@@ -74,6 +74,27 @@ window.addEventListener('load', function () {
                 return;
             }
 
+            // ✅ Special strict filtering for 空調服
+            if (clothType === '空調服') {
+                // Explicitly hide ジャンパー & 防寒ベスト
+                if (
+                    rowText.startsWith('ジャンパー') ||
+                    rowText.startsWith('防寒ベスト')
+                ) {
+                    row.style.display = 'none';
+                    return;
+                }
+
+                // Show ONLY the three 空調服 types
+                const shouldShow = allowedPrefixes.some(prefix =>
+                    rowText.startsWith(prefix)
+                );
+
+                row.style.display = shouldShow ? '' : 'none';
+                return;
+            }
+
+            // ✅ Normal filtering for ジャンパー / 防寒ベスト
             const shouldShow = allowedPrefixes.some(prefix =>
                 rowText.startsWith(prefix)
             );
@@ -105,7 +126,6 @@ window.addEventListener('load', function () {
             characterData: true
         });
 
-        // Initial filter
         filterLookupTable(currentSelectedType);
     }
 
@@ -117,17 +137,14 @@ window.addEventListener('load', function () {
             mutation.addedNodes.forEach(node => {
                 if (node.nodeType !== Node.ELEMENT_NODE) return;
 
-                // Bind 種類 dropdown
                 if (node.querySelector && node.querySelector('[field-id="種類"]')) {
                     bindKindaChange(node);
                 }
 
-                // Detect lookup dialog
                 if (node.classList && node.classList.contains('kb-dialog-container')) {
                     setTimeout(observeDialogTable, 50);
                 }
 
-                // Detect tbody redraw
                 if (node.tagName === 'TBODY') {
                     const dialog = node.closest('.kb-dialog-container');
                     if (dialog) {
@@ -142,16 +159,4 @@ window.addEventListener('load', function () {
 
     observer.observe(parentNode, config);
 
-    /* =========================
-       Initial bind (already loaded)
-    ========================= */
-    const existingKinda = document.querySelector('[field-id="種類"] select');
-    if (existingKinda) {
-        currentSelectedType = existingKinda.value;
-        bindKindaChange(
-            existingKinda.closest('tr') ||
-            existingKinda.closest('div') ||
-            document.body
-        );
-    }
-});
+    /* ==*
