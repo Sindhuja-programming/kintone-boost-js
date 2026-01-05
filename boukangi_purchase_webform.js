@@ -2,68 +2,67 @@ window.addEventListener('load', function () {
     'use strict';
 
     const parentNode = document.body;
-    const config = { childList: true, subtree: true };
 
-    // Cloth type → allowed size prefixes mapping
-    const clothTypeSizeMapping = {
+    // Exact prefix mapping (matches your data)
+    const clothTypePrefixes = {
         'ジャンパー': ['ジャンパー'],
         '防寒ベスト': ['防寒ベスト'],
         '空調服': ['ファンセット付', 'ベストのみ', 'ファンセットのみ']
     };
 
-    let currentSelectedType = '';
+    let currentType = '';
 
     /* =========================
-       Bind 種類 change event
+       Bind 種類 dropdown
     ========================= */
-    function bindKindaChange(container) {
-        const kindaSelect = container.querySelector('[field-id="種類"] select');
-        if (!kindaSelect || kindaSelect.dataset.bound) return;
+    function bindTypeChange(container) {
+        const select = container.querySelector('[field-id="種類"] select');
+        if (!select || select.dataset.bound) return;
 
-        kindaSelect.dataset.bound = 'true';
+        select.dataset.bound = 'true';
 
-        kindaSelect.addEventListener('change', function () {
-            currentSelectedType = kindaSelect.value;
+        select.addEventListener('change', function () {
+            currentType = select.value;
 
-            const sizeField = container.querySelector('[field-id="サイズ"] input');
+            const sizeInput = container.querySelector('[field-id="サイズ"] input');
             const lookupBtn = container.querySelector(
                 '[field-id="サイズ"] .kb-icon-lookup.kb-search'
             );
 
-            if (!sizeField || !lookupBtn) return;
+            if (!sizeInput || !lookupBtn) return;
 
-            // Always open lookup fresh (filtering is handled in the dialog)
-            sizeField.value = '';
-            lookupBtn.dispatchEvent(new Event('click'));
+            // Always open lookup freshly
+            sizeInput.value = '';
+            lookupBtn.click();
         });
     }
 
     /* =========================
-       Filter lookup table rows
+       Filter lookup table
     ========================= */
-    function filterLookupTable(clothType) {
-        const lookupDialog = document.querySelector('.kb-dialog-container');
-        if (!lookupDialog) return;
+    function filterLookupTable() {
+        const dialog = document.querySelector('.kb-dialog-container');
+        if (!dialog) return;
 
-        const tableRows = lookupDialog.querySelectorAll('tbody tr');
-        if (!tableRows.length) return;
+        const rows = dialog.querySelectorAll('tbody tr');
+        if (!rows.length) return;
 
-        const allowedPrefixes = clothTypeSizeMapping[clothType];
+        const prefixes = clothTypePrefixes[currentType];
 
-        // If no valid cloth type selected → show all
-        if (!allowedPrefixes || allowedPrefixes.length === 0) {
-            tableRows.forEach(row => row.style.display = '');
+        // No selection → show all
+        if (!prefixes || prefixes.length === 0) {
+            rows.forEach(row => row.style.display = '');
             return;
         }
 
-        tableRows.forEach(row => {
-            const rowText = row.textContent.trim();
+        rows.forEach(row => {
+            const text = row.textContent.replace(/\s+/g, ' ').trim();
 
-            const shouldShow = allowedPrefixes.some(prefix =>
-                rowText.startsWith(prefix)
+            const match = prefixes.some(prefix =>
+                text.startsWith(prefix)
             );
 
-            row.style.display = shouldShow ? '' : 'none';
+            row.style.display = match ? '' : 'none';
         });
     }
 
@@ -72,29 +71,24 @@ window.addEventListener('load', function () {
     ========================= */
     let dialogObserver = null;
 
-    function observeDialogTable() {
-        const lookupDialog = document.querySelector('.kb-dialog-container');
-        if (!lookupDialog) return;
+    function observeDialog() {
+        const dialog = document.querySelector('.kb-dialog-container');
+        if (!dialog) return;
 
-        if (dialogObserver) {
-            dialogObserver.disconnect();
-        }
+        if (dialogObserver) dialogObserver.disconnect();
 
-        dialogObserver = new MutationObserver(() => {
-            filterLookupTable(currentSelectedType);
-        });
+        dialogObserver = new MutationObserver(filterLookupTable);
 
-        dialogObserver.observe(lookupDialog, {
+        dialogObserver.observe(dialog, {
             childList: true,
             subtree: true
         });
 
-        // Initial filter when dialog opens
-        filterLookupTable(currentSelectedType);
+        filterLookupTable();
     }
 
     /* =========================
-       Main DOM observer
+       Main observer
     ========================= */
     const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
@@ -103,35 +97,33 @@ window.addEventListener('load', function () {
 
                 // Bind 種類 field
                 if (node.querySelector && node.querySelector('[field-id="種類"]')) {
-                    bindKindaChange(node);
+                    bindTypeChange(node);
                 }
 
-                // Detect lookup dialog open
+                // Lookup dialog opened
                 if (node.classList && node.classList.contains('kb-dialog-container')) {
-                    setTimeout(observeDialogTable, 50);
+                    setTimeout(observeDialog, 50);
                 }
 
-                // Detect table body insertion
+                // Table body rendered
                 if (node.tagName === 'TBODY') {
-                    setTimeout(() => {
-                        filterLookupTable(currentSelectedType);
-                    }, 50);
+                    setTimeout(filterLookupTable, 50);
                 }
             });
         });
     });
 
-    observer.observe(parentNode, config);
+    observer.observe(parentNode, { childList: true, subtree: true });
 
     /* =========================
-       Initial binding (existing form)
+       Initial binding
     ========================= */
-    const existingKinda = document.querySelector('[field-id="種類"] select');
-    if (existingKinda) {
-        currentSelectedType = existingKinda.value;
-        bindKindaChange(
-            existingKinda.closest('tr') ||
-            existingKinda.closest('div') ||
+    const existingSelect = document.querySelector('[field-id="種類"] select');
+    if (existingSelect) {
+        currentType = existingSelect.value;
+        bindTypeChange(
+            existingSelect.closest('tr') ||
+            existingSelect.closest('div') ||
             document.body
         );
     }
