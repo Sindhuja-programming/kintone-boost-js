@@ -1,5 +1,4 @@
-window.addEventListener('load', function () {
-    'use strict';
+
 
     const parentNode = document.body;
     const config = { childList: true, subtree: true };
